@@ -1,0 +1,18 @@
+{
+  "name": "morning-reminder",
+  "version": "1.0.0",
+  "description": "Daily morning reminder Discord webhook (Taipei weather + Google Calendar items) for Google Cloud Functions",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "functions-framework --target=morningReminder",
+    "preview": "node local.js",
+    "send": "node local.js --send"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.4.0",
+    "node-ical": "^0.20.1"
+  }
+}
