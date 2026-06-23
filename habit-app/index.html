@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>習慣打卡 · Habit Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="title-row">
+        <h1>習慣打卡</h1>
+        <span class="today-label" id="todayLabel"></span>
+      </div>
+      <p class="subtitle">每天累積你的好習慣 · 一週進度條每週一自動刷新</p>
+    </header>
+
+    <section class="summary" id="summary">
+      <div class="summary-card">
+        <span class="summary-num" id="todayDoneCount">0</span>
+        <span class="summary-label">今日已完成</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-num" id="weekDoneCount">0</span>
+        <span class="summary-label">本週打卡次數</span>
+      </div>
+      <div class="summary-card best">
+        <span class="summary-num" id="bestOfAll">0</span>
+        <span class="summary-label">🔥 最高連擊</span>
+      </div>
+    </section>
+
+    <main id="habitList" class="habit-list"></main>
+
+    <button class="add-btn" id="addBtn">＋ 新增習慣</button>
+
+    <footer class="app-footer">
+      <p>資料只存在這個裝置（瀏覽器 localStorage），不會上傳到任何地方。</p>
+      <div class="footer-actions">
+        <button class="link-btn" id="exportBtn">匯出備份</button>
+        <button class="link-btn" id="importBtn">匯入備份</button>
+        <input type="file" id="importFile" accept="application/json" hidden />
+      </div>
+    </footer>
+  </div>
+
+  <!-- 新增 / 編輯習慣的對話框 -->
+  <div class="modal-overlay" id="modal" hidden>
+    <div class="modal">
+      <h2 id="modalTitle">新增習慣</h2>
+      <label class="field">
+        <span>Emoji</span>
+        <input type="text" id="habitEmoji" maxlength="4" placeholder="💧" />
+      </label>
+      <div class="emoji-suggest" id="emojiSuggest"></div>
+      <label class="field">
+        <span>名稱</span>
+        <input type="text" id="habitName" maxlength="20" placeholder="只喝水" />
+      </label>
+      <div class="modal-actions">
+        <button class="danger-btn" id="deleteHabitBtn" hidden>刪除</button>
+        <span class="spacer"></span>
+        <button class="ghost-btn" id="cancelBtn">取消</button>
+        <button class="primary-btn" id="saveBtn">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
