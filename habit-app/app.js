@@ -148,7 +148,7 @@
     els.weekDoneCount.textContent = String(weekDone);
     els.bestOfAll.textContent = String(bestAll);
 
-    // 卡片列表
+    // 清單列
     els.list.innerHTML = "";
     if (state.habits.length === 0) {
       const empty = document.createElement("div");
@@ -158,53 +158,65 @@
       return;
     }
 
-    for (const h of state.habits) {
-      els.list.appendChild(renderCard(h, tKey, week));
-    }
+    state.habits.forEach((h, i) => {
+      els.list.appendChild(renderRow(h, i, tKey, week));
+    });
   }
 
-  function renderCard(habit, tKey, week) {
+  function renderRow(habit, index, tKey, week) {
     const { current, best } = calcStreaks(habit.dates);
     const doneToday = habit.dates.includes(tKey);
     const weekDoneCount = week.filter((k) => habit.dates.includes(k)).length;
 
-    const card = document.createElement("div");
-    card.className = "habit-card" + (doneToday ? " done-today" : "");
+    const row = document.createElement("div");
+    row.className = "habit-row" + (doneToday ? " done-today" : "");
 
-    // 上半部
-    const top = document.createElement("div");
-    top.className = "habit-top";
+    // 編號
+    const idx = document.createElement("div");
+    idx.className = "row-index";
+    idx.textContent = String(index + 1);
 
+    // emoji（點擊可編輯）
     const emoji = document.createElement("div");
     emoji.className = "habit-emoji";
     emoji.textContent = habit.emoji || "✅";
     emoji.title = "編輯習慣";
     emoji.addEventListener("click", () => openModal(habit));
 
+    // 名稱 + 目前連續天數（點擊可編輯）
     const info = document.createElement("div");
     info.className = "habit-info";
+    info.title = "編輯習慣";
     const name = document.createElement("p");
     name.className = "habit-name";
     name.textContent = habit.name;
-    const streaks = document.createElement("div");
-    streaks.className = "habit-streaks";
-    streaks.innerHTML =
-      `<span class="cur">目前連續 <strong>${current}</strong> 天</span>` +
-      `<span class="best">🔥 最高連擊 <strong>${best}</strong></span>`;
+    const sub = document.createElement("div");
+    sub.className = "habit-sub";
+    sub.textContent = current > 0 ? `目前連續 ${current} 天` : "今天還沒打卡";
     info.appendChild(name);
-    info.appendChild(streaks);
+    info.appendChild(sub);
+    info.addEventListener("click", () => openModal(habit));
 
+    // 最高連擊徽章
+    const badge = document.createElement("div");
+    badge.className = "streak-badge";
+    badge.title = "最高連擊";
+    badge.innerHTML = `<span class="num">🔥${best}</span><span class="cap">最高連擊</span>`;
+
+    // 今日打卡圈
     const check = document.createElement("button");
     check.className = "check-btn" + (doneToday ? " done" : "");
     check.textContent = doneToday ? "✓" : "";
     check.title = doneToday ? "取消今日打卡" : "完成今日打卡";
     check.addEventListener("click", () => toggleDay(habit, tKey));
 
-    top.appendChild(emoji);
-    top.appendChild(info);
-    top.appendChild(check);
+    row.appendChild(idx);
+    row.appendChild(emoji);
+    row.appendChild(info);
+    row.appendChild(badge);
+    row.appendChild(check);
 
-    // 一週進度
+    // 一週進度（接在列下方，佔滿整列寬度）
     const weekWrap = document.createElement("div");
     weekWrap.className = "week";
 
@@ -242,9 +254,8 @@
     weekWrap.appendChild(bar);
     weekWrap.appendChild(days);
 
-    card.appendChild(top);
-    card.appendChild(weekWrap);
-    return card;
+    row.appendChild(weekWrap);
+    return row;
   }
 
   function formatTodayLabel() {
