@@ -8,10 +8,22 @@ import {
   BaseGuildTextChannel,
   PermissionFlagsBits,
   Partials,
+  REST,
+  Routes,
+  SlashCommandBuilder,
+  ChatInputCommandInteraction,
+  ButtonInteraction,
+  InteractionType,
 } from "discord.js";
 import { ephemeralFetchConversation } from "./messageFetch";
 import { callKindroidAI } from "./kindroidAPI";
 import { BotConfig, DMConversationCount } from "./types";
+import {
+  handleQuizStart,
+  handleQuizAnswer,
+  getAnswerFromCustomId,
+  isToeicButtonId,
+} from "./toeicQuiz";
 
 //Bot back and forth (prevent infinite loop but allow for mentioning other bots in conversation)
 type BotConversationChain = {
@@ -130,9 +142,34 @@ async function createDiscordClientForBot(
     partials: [Partials.Channel, Partials.Message],
   });
 
+  const toeicCommand = new SlashCommandBuilder()
+    .setName("toeic")
+    .setDescription("開始多益文法練習測驗")
+    .addIntegerOption((opt) =>
+      opt
+        .setName("題數")
+        .setDescription("練習題數（1–10，預設 5 題）")
+        .setMinValue(1)
+        .setMaxValue(10)
+        .setRequired(false)
+    );
+
   // Set up event handlers
-  client.once("ready", () => {
+  client.once("ready", async () => {
     console.log(`Bot [${botConfig.id}] logged in as ${client.user?.tag}`);
+    const appId = client.application?.id;
+    if (!appId) return;
+    try {
+      const rest = new REST({ version: "10" }).setToken(
+        botConfig.discordBotToken
+      );
+      await rest.put(Routes.applicationCommands(appId), {
+        body: [toeicCommand.toJSON()],
+      });
+      console.log(`Bot [${botConfig.id}] slash commands registered.`);
+    } catch (err) {
+      console.error(`Bot [${botConfig.id}] failed to register commands:`, err);
+    }
   });
 
   // Handle incoming messages
@@ -224,6 +261,33 @@ async function createDiscordClientForBot(
       ) {
         await message.channel.send(errorMessage);
       }
+    }
+  });
+
+  // Handle slash commands and button interactions
+  client.on("interactionCreate", async (interaction) => {
+    try {
+      if (
+        interaction.type === InteractionType.ApplicationCommand &&
+        interaction.isChatInputCommand()
+      ) {
+        const cmd = interaction as ChatInputCommandInteraction;
+        if (cmd.commandName === "toeic") {
+          const count = cmd.options.getInteger("題數") ?? 5;
+          await handleQuizStart(cmd, count);
+        }
+        return;
+      }
+
+      if (interaction.isButton()) {
+        const btn = interaction as ButtonInteraction;
+        if (!isToeicButtonId(btn.customId)) return;
+        const answer = getAnswerFromCustomId(btn.customId);
+        if (!answer) return;
+        await handleQuizAnswer(btn, answer);
+      }
+    } catch (err) {
+      console.error(`[Bot ${botConfig.id}] Interaction error:`, err);
     }
   });
 
